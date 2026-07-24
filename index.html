@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- 1. 新增預覽標籤 (OG Tags)，確保 LINE 分享連結時顯示正確的標題與圖片 -->
+    <!-- 1. 預覽標籤 (OG Tags) - 針對 GitHub 網址優化 -->
+    <title>✨ 我的超人老爸 ✨</title>
     <meta property="og:title" content="✨ 我的超人老爸 ✨">
-    <meta property="og:description" content="快來分享爸爸的超能力，還可以抽大獎喔！">
-    <meta property="og:image" content="2026daddy.jpg"> <!-- 預設抓取您的模板圖片作為縮圖 -->
+    <meta property="og:description" content="快來分享爸爸的超能力即可參加抽獎喔！">
+    <!-- 預覽圖建議使用完整絕對網址 -->
+    <meta property="og:image" content="https://apple54986.github.io/2026happydaddysday/2026daddy.jpg">
+    <meta property="og:url" content="https://apple54986.github.io/2026happydaddysday/">
     <meta property="og:type" content="website">
 
-    <title>我的超人老爸</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        /* 1. 修正按鈕顏色為藍色 #5170ff */
+        /* 藍色按鈕樣式 #5170ff */
         :root { 
             --primary-blue: #5170ff; 
             --bg-cream: #fdf8f1; 
@@ -29,7 +31,6 @@
         
         textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
         
-        /* 修正按鈕樣式 */
         button { 
             background-color: var(--primary-blue); 
             color: white; 
@@ -57,7 +58,6 @@
 <body>
 
 <div class="container">
-    <!-- 步驟 1: 送出超能力 -->
     <div id="step1" class="step active">
         <h2>✨ 我的超人老爸 ✨</h2>
         <p>第一步：請分享你心中的爸爸，擁有什麼超能力，是甚麼樣子的超人呢？</p>
@@ -66,7 +66,6 @@
         <button id="btn1" onclick="submitQuote()">送出超能力，抽大獎</button>
     </div>
 
-    <!-- 步驟 2: 送出抽獎資料 -->
     <div id="step2" class="step">
         <h2>🎁 填寫抽獎報名 🎁</h2>
         <input type="text" id="empId_display" placeholder="工號(9位數)">
@@ -76,7 +75,6 @@
         <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
-    <!-- 步驟 3: 製作卡片 -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
         <p>(完成請點預覽)</p>
@@ -104,40 +102,18 @@
         }).catch(err => console.error(err));
     };
 
-    /**
-     * 穩定性邏輯增強：
-     * 1. 增加超時保護與 Error Catch，避免網路中斷導致頁面卡死。
-     * 2. 優化 fetch 設定，確保在 GAS 環境下資料能成功發出。
-     */
+    // 穩定性邏輯：fetch no-cors 模式
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
-        const finalUrl = `${GAS_URL}?${query}`;
-        
-        try {
-            // 使用 no-cors 模式確保發送行為最快且不被跨域攔截
-            fetch(finalUrl, { 
-                method: 'GET',
-                mode: 'no-cors',
-                cache: 'no-cache'
-            });
-        } catch (e) {
-            console.warn("傳送紀錄中...");
-        }
-        
-        // 增加緩衝時間（穩定性邏輯）：確保封包有足夠時間從手機發出後才切換下一步
+        fetch(`${GAS_URL}?${query}`, { mode: 'no-cors' });
         return new Promise(resolve => setTimeout(resolve, 800));
     }
 
     async function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
-        if (!quote) return alert("請輸入內容喔");
-        
-        const btn = document.getElementById('btn1');
-        const loader = document.getElementById('loading1');
-        
-        btn.disabled = true;
-        loader.style.display = 'block';
-
+        if (!quote) return alert("請輸入內容");
+        document.getElementById('btn1').disabled = true;
+        document.getElementById('loading1').style.display = 'block';
         await sendDataToGAS({ action: 'saveQuote', quote: quote });
         showStep(2);
     }
@@ -147,20 +123,9 @@
         const dept = document.getElementById('dept_display').value;
         const name = document.getElementById('name_display').value;
         if(!empId || !name) return alert("請完整填寫工號公司部門與姓名");
-
-        const btn = document.getElementById('btn3');
-        const loader = document.getElementById('loading2');
-        
-        btn.disabled = true;
-        loader.style.display = 'block';
-
-        await sendDataToGAS({ 
-            action: 'saveRaffle', 
-            empId: empId, 
-            dept: dept, 
-            name: name 
-        });
-
+        document.getElementById('btn3').disabled = true;
+        document.getElementById('loading2').style.display = 'block';
+        await sendDataToGAS({ action: 'saveRaffle', empId: empId, dept: dept, name: name });
         alert("抽獎資料登記完成！");
         showStep(3);
     }
@@ -175,14 +140,12 @@
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
-        if(!title || !content || !sender) return alert("請完整填寫喔");
-
+        if(!title || !content || !sender) return alert("請完整填寫");
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.crossOrigin = "anonymous"; 
         img.src = CARD_TEMPLATE_URL + "?v=" + new Date().getTime();
-        
         img.onload = function() {
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
@@ -193,11 +156,9 @@
             wrapText(ctx, content, 230, 400, 800, 80); 
             ctx.font = "bold 40px Microsoft JhengHei"; 
             ctx.fillText(sender, 730, 900);
-            
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);
-            const finalImg = document.getElementById('finalImg');
-            finalImg.src = dataURL;
-            finalImg.style.display = 'block';
+            document.getElementById('finalImg').src = dataURL;
+            document.getElementById('finalImg').style.display = 'block';
             document.getElementById('saveInstruction').style.display = 'block';
         };
     }
