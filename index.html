@@ -3,19 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- 1. 預覽標籤 (OG Tags) - 已針對新路徑 2026happydaddysday 優化 -->
-    <title>✨ 我的超人老爸 ✨</title>
-    <meta property="og:title" content="✨ 我的超人老爸 ✨">
-    <meta property="og:description" content="快來分享爸爸的超能力即可參加抽獎喔！">
-    <!-- 使用絕對網址確保 LINE 抓取縮圖成功 -->
-    <meta property="og:image" content="https://apple54986.github.io/2026happydaddysday/2026daddy.jpg">
-    <meta property="og:url" content="https://apple54986.github.io/2026happydaddysday/">
-    <meta property="og:type" content="website">
-
+    <title>我的超人老爸</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        /* 2. 藍色按鈕樣式核心變數 #5170ff */
+        /* 1. 修正按鈕顏色為藍色 #5170ff */
         :root { 
             --primary-blue: #5170ff; 
             --bg-cream: #fdf8f1; 
@@ -29,13 +20,12 @@
         h2 { color: var(--primary-blue); margin-bottom: 15px; }
         p { color: #666; font-size: 15px; }
         
-        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; outline: none; }
-        textarea:focus, input:focus { border-color: var(--primary-blue); }
+        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
         
-        /* 藍色按鈕細節優化 */
+        /* 修正按鈕樣式 */
         button { 
-            background-color: var(--primary-blue) !important; 
-            color: white !important; 
+            background-color: var(--primary-blue); 
+            color: white; 
             border: none; 
             padding: 15px 30px; 
             border-radius: 30px; 
@@ -48,10 +38,9 @@
             box-shadow: 0 4px 10px rgba(81, 112, 255, 0.3);
         }
         button:active { transform: scale(0.98); }
-        button:disabled { background-color: #ccc !important; cursor: not-allowed; box-shadow: none; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
         
-        .share-btn { background-color: white !important; color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; box-shadow: none !important; }
-        
+        .share-btn { background-color: white !important; color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; }
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
@@ -66,7 +55,7 @@
         <h2>✨ 我的超人老爸 ✨</h2>
         <p>第一步：請分享你心中的爸爸，擁有什麼超能力，是甚麼樣子的超人呢？</p>
         <textarea id="quoteInput_display" rows="3" placeholder="例如：打呼響徹雲霄，左鄰右舍都聽得到😅或是早出晚歸工作不怕累的超人"></textarea>
-        <div id="loading1" class="loading-text">🚀 資料穩定傳送中，請稍候...</div>
+        <div id="loading1" class="loading-text">🚀 資料傳送中，請稍候...</div>
         <button id="btn1" onclick="submitQuote()">送出超能力，抽大獎</button>
     </div>
 
@@ -80,12 +69,12 @@
         <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
-    <!-- 步驟 3: 製作卡片 -->
+    <!-- 步驟 3: 製作卡片 (同前) -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
         <p>(完成請點預覽)</p>
         <input type="text" id="cardTitle" placeholder="標題：親愛的老爸" maxlength="10">
-        <textarea id="cardContent" rows="4" placeholder="謝謝您的付出與辛勞!" maxlength="56"></textarea>
+        <textarea id="cardContent" rows="4" placeholder="謝謝您的付出與辛勞" maxlength="56"></textarea>
         <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
         <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
         <canvas id="cardCanvas" style="display:none;"></canvas>
@@ -98,7 +87,7 @@
 </div>
 
 <script>
-    // ⚠️ 請確保這是您最新部署（含分流邏輯）的 GAS 網址
+    // ⚠️ 請替換成您重新部署後的 GAS 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbybkgqKYFIyQVuyznr69QCMGTyswIX70JqsZarMN5qL7nMfWLzupOfJLutzvzYBJbP3Ow/exec"; 
     const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
     const MY_LIFF_ID = "2009874827-0sg2wphM"; 
@@ -110,35 +99,34 @@
     };
 
     /**
-     * 3. 穩定性邏輯：
-     * 採用 fetch 'no-cors' 模式。這在行動裝置 LINE 環境中發送最穩定，
-     * 並且不會因為等待 Google Sheets 回應而導致 UI 假死。
+     * 3. 增強傳輸穩定性：使用 async fetch 並優化 UI 反饋
+     * 為了速度，我們不等待 GAS 完全回傳（因為 GAS 回傳有時會因跳轉導致 CORS 錯誤），
+     * 只要發出請求後延遲一小段時間即進入下一步。
      */
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
         const finalUrl = `${GAS_URL}?${query}`;
         
-        try {
-            fetch(finalUrl, { mode: 'no-cors' });
-        } catch (e) {
-            console.log("正在發送資料...");
-        }
+        // 優先使用 fetch 且不處理回應 (Fire and Forget)，這在 LIFF 環境最快
+        fetch(finalUrl, { mode: 'no-cors' });
         
-        // 增加緩衝時間確保封包發出再切換步驟
-        return new Promise(resolve => setTimeout(resolve, 800));
+        // 延遲 600ms 給瀏覽器一點點時間處理發送，然後直接回傳
+        return new Promise(resolve => setTimeout(resolve, 600));
     }
 
     async function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
-        if (!quote) return alert("請輸入內容");
+        if (!quote) return alert("請輸入內容喔");
         
         const btn = document.getElementById('btn1');
         const loader = document.getElementById('loading1');
+        
         btn.disabled = true;
         loader.style.display = 'block';
 
-        // 穩定分流：saveQuote
+        // action 指定為 saveQuote
         await sendDataToGAS({ action: 'saveQuote', quote: quote });
+        
         showStep(2);
     }
 
@@ -146,14 +134,15 @@
         const empId = document.getElementById('empId_display').value;
         const dept = document.getElementById('dept_display').value;
         const name = document.getElementById('name_display').value;
-        if(!empId || !name) return alert("請完整填寫資訊");
+        if(!empId || !name) return alert("請完整填寫工號公司部門與姓名");
 
         const btn = document.getElementById('btn3');
         const loader = document.getElementById('loading2');
+        
         btn.disabled = true;
         loader.style.display = 'block';
 
-        // 穩定分流：saveRaffle
+        // action 指定為 saveRaffle
         await sendDataToGAS({ 
             action: 'saveRaffle', 
             empId: empId, 
@@ -161,10 +150,11 @@
             name: name 
         });
 
-        alert("登記完成！快來做一張漂亮的卡片吧");
+        alert("抽獎資料登記完成！");
         showStep(3);
     }
 
+    // 顯示步驟與 Canvas 繪製邏輯保持不變...
     function showStep(s) {
         document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
         document.getElementById('step' + s).classList.add('active');
@@ -172,10 +162,11 @@
     }
 
     function drawCard() {
+        // ... (保持您原有的 drawCard 邏輯)
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
-        if(!title || !content || !sender) return alert("請填寫完整內容");
+        if(!title || !content || !sender) return alert("請完整填寫喔");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
@@ -230,7 +221,7 @@
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: '送給爸爸的卡片' });
             } else {
-                alert("手機暫不支援自動分享，請長按圖片儲存並發送給好友");
+                alert("手機暫不支援自動分享，請長按圖片儲存");
             }
         } catch (e) { console.log("Share failed", e); }
     }
