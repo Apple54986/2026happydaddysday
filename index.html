@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老爸金句王</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        :root { --primary-red: #d35b5b; --bg-cream: #fdf8f1; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-cream); margin: 0; padding: 0; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; text-align: center; }
+        .step { display: none; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        h2 { color: var(--primary-red); margin-bottom: 15px; }
+        p { color: #666; font-size: 15px; }
+        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
+        button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; transition: 0.3s; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .share-btn { background-color: white !important; color: var(--primary-red) !important; border: 2px solid var(--primary-red) !important; }
+        canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
+        #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
+        .instruction { font-size: 14px; color: #888; margin-top: 10px; }
+        .loading-text { color: var(--primary-red); font-weight: bold; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 步驟 1: 送出超能力 -->
+    <div id="step1" class="step active">
+        <h2>🌸 老爸金句王 🌸</h2>
+        <p>第一步：請分享你心中的爸爸，擁有什麼超能力，是甚麼樣子的超人呢？</p>
+        <textarea id="quoteInput_display" rows="3" placeholder="例如：打呼響徹雲霄，左鄰右舍都聽得到!或是工作早出晚歸不怕累的超人"></textarea>
+        <div id="loading1" class="loading-text">資料傳送中，請稍候...</div>
+        <button id="btn1" onclick="submitQuote()">送出超能力，抽大獎</button>
+    </div>
+
+    <!-- 步驟 2: 送出抽獎資料 -->
+    <div id="step2" class="step">
+        <h2>🎁 填寫抽獎報名 🎁</h2>
+        <input type="text" id="empId_display" placeholder="工號(9位數)">
+        <input type="text" id="dept_display" placeholder="公司部門">
+        <input type="text" id="name_display" placeholder="姓名">
+        <div id="loading2" class="loading-text">資料登記中，請稍候...</div>
+        <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
+    </div>
+
+    <!-- 步驟 3: 製作卡片 -->
+    <div id="step3" class="step">
+        <h2>💖 製作專屬卡片</h2>
+        <p>(內容按 Enter 可換行，完成請點預覽)</p>
+        <input type="text" id="cardTitle" placeholder="標題：親愛的老爸" maxlength="10">
+        <textarea id="cardContent" rows="4" placeholder="例如：謝謝您的付出與辛勞！父親節快樂" maxlength="56" style="white-space: pre-wrap;"></textarea>
+        <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
+        
+        <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
+        
+        <canvas id="cardCanvas" style="display:none;"></canvas>
+        <img id="finalImg" alt="卡片製作完成">
+        
+        <div id="saveInstruction" style="display:none;">
+            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方按鈕分享卡片給老爸吧！</p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
+            <p class="instruction">💡 提示：若按鈕沒反應，請<b>「長按上方圖片」</b>儲存或傳送給好友。</p>
+            <p style="margin-top: 20px; color: #888;">感謝您的參與，祝您中大獎！</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbztK9ha9g2fx0YmGZ2OQ5UYfnzP3-xblFGuXjM6Te-D2X9nOgkS6n8zWM-SwwZbSxm_9A/exec"; 
+    const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
+    const MY_LIFF_ID = "2009874827-0sg2wphM"; 
+
+    window.onload = function() {
+        liff.init({ liffId: MY_LIFF_ID }).then(() => {
+            if (!liff.isLoggedIn()) { liff.login(); }
+        }).catch(err => console.error(err));
+    };
+
+    // 優化後的傳送函式：改用 fetch + no-cors (最高穩定性)
+    async function sendDataToGAS(params) {
+        const query = new URLSearchParams(params).toString();
+        try {
+            await fetch(`${GAS_URL}?${query}`, { mode: 'no-cors' });
+            return true;
+        } catch (e) {
+            console.error("傳送失敗", e);
+            return false;
+        }
+    }
+
+    async function submitQuote() {
+        const quote = document.getElementById('quoteInput_display').value;
+        if (!quote) return alert("請輸入內容喔");
+        
+        const btn = document.getElementById('btn1');
+        const loader = document.getElementById('loading1');
+        btn.disabled = true;
+        loader.style.display = 'block';
+
+        await sendDataToGAS({ action: 'saveQuote', quote: quote });
+        
+        // 為了確保體驗，無論 GAS 是否回傳成功都進入下一頁
+        setTimeout(() => { showStep(2); }, 800);
+    }
+
+    async function submitRaffle() {
+        const empId = document.getElementById('empId_display').value;
+        const dept = document.getElementById('dept_display').value;
+        const name = document.getElementById('name_display').value;
+        if(!empId || !name) return alert("請完整填寫工號9位數與姓名");
+
+        const btn = document.getElementById('btn3');
+        const loader = document.getElementById('loading2');
+        btn.disabled = true;
+        loader.style.display = 'block';
+
+        await sendDataToGAS({ action: 'saveRaffle', empId: empId, dept: dept, name: name });
+
+        setTimeout(() => {
+            alert("抽獎資料填寫完成，來製作專屬卡片吧💖");
+            showStep(3);
+        }, 800);
+    }
+
+    function drawCard() {
+        const title = document.getElementById('cardTitle').value;
+        const content = document.getElementById('cardContent').value;
+        const sender = document.getElementById('cardSender').value;
+        if(!title || !content || !sender) return alert("請完整填寫標題、內容與署名");
+
+        const canvas = document.getElementById('cardCanvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = "anonymous"; 
+        img.src = CARD_TEMPLATE_URL + "?v=" + new Date().getTime();
+        
+        img.onload = function() {
+            canvas.width = img.width; canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            ctx.fillStyle = "#8e443d"; 
+            ctx.font = "bold 66px Microsoft JhengHei"; 
+            ctx.fillText(title, 230, 290); 
+            ctx.font = "55px Microsoft JhengHei";
+            wrapText(ctx, content, 230, 400, 800, 80); 
+            ctx.font = "bold 40px Microsoft JhengHei"; 
+            ctx.fillText(sender, 730, 900);
+            
+            const dataURL = canvas.toDataURL("image/jpeg", 0.9);
+            const finalImg = document.getElementById('finalImg');
+            finalImg.src = dataURL;
+            finalImg.style.display = 'block';
+            
+            document.getElementById('saveInstruction').style.display = 'block';
+            document.getElementById('btnPreview').innerText = "重新產生預覽圖片";
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        const paragraphs = text.split('\n');
+        for (let i = 0; i < paragraphs.length; i++) {
+            let words = paragraphs[i].split('');
+            let line = '';
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n];
+                if (context.measureText(testLine).width > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n];
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+            y += lineHeight;
+        }
+    }
+
+    async function shareCardImage() {
+        const canvas = document.getElementById('cardCanvas');
+        try {
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            const file = new File([blob], "mommy_card.jpg", { type: "image/jpeg" });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: '送給老爸的卡片' });
+            } else {
+                alert("手機暫不支援自動分享，請「長按圖片」選擇儲存或傳送喔！");
+            }
+        } catch (e) {
+            console.log("分享取消或失敗");
+        }
+    }
+
+    function showStep(s) {
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        document.getElementById('step' + s).classList.add('active');
+        window.scrollTo(0,0);
+    }
+</script>
+</body>
+</html>
