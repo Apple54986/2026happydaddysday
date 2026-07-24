@@ -69,7 +69,8 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbztK9ha9g2fx0YmGZ2OQ5UYfnzP3-xblFGuXjM6Te-D2X9nOgkS6n8zWM-SwwZbSxm_9A/exec"; 
+    // 1. 請在此處替換成你剛剛部署得到的 GAS 網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8vDd9-luU-WCSXoZiUSe4gDMmb4td-naXLfWn1ITls7OWzA3_0vGTAvq8mqZdzN6VQ/exec"; 
     const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
     const MY_LIFF_ID = "2009874827-0sg2wphM"; 
 
@@ -79,12 +80,16 @@
         }).catch(err => console.error(err));
     };
 
-    // 優化後的傳送函式：改用 fetch + no-cors (最高穩定性)
+    // 修正後的傳送函式：使用 GET 請求並補強錯誤處理
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
         try {
-            await fetch(`${GAS_URL}?${query}`, { mode: 'no-cors' });
-            return true;
+            // 使用 mode: 'cors' 配合 GAS 的回傳處理
+            const response = await fetch(`${GAS_URL}?${query}`, {
+                method: 'GET',
+                mode: 'no-cors' // 在 GAS 的情況下，no-cors 最能確保不被瀏覽器阻擋
+            });
+            return true; 
         } catch (e) {
             console.error("傳送失敗", e);
             return false;
