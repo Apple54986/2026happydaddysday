@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>老爸金句王</title>
+    <title>我的超人老爸</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root { --primary-red: #d35b5b; --bg-cream: #fdf8f1; }
@@ -29,7 +29,7 @@
 <div class="container">
     <!-- 步驟 1: 送出超能力 -->
     <div id="step1" class="step active">
-        <h2>🌸 老爸金句王 🌸</h2>
+        <h2>✨ 我的超人老爸 ✨</h2>
         <p>第一步：請分享你心中的爸爸，擁有什麼超能力，是甚麼樣子的超人呢？</p>
         <textarea id="quoteInput_display" rows="3" placeholder="例如：打呼響徹雲霄，左鄰右舍都聽得到!或是工作早出晚歸不怕累的超人"></textarea>
         <div id="loading1" class="loading-text">資料傳送中，請稍候...</div>
@@ -60,7 +60,7 @@
         <img id="finalImg" alt="卡片製作完成">
         
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方按鈕分享卡片給老爸吧！</p>
+            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🔥 點擊下方按鈕分享卡片送給爸爸吧！</p>
             <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
             <p class="instruction">💡 提示：若按鈕沒反應，請<b>「長按上方圖片」</b>儲存或傳送給好友。</p>
             <p style="margin-top: 20px; color: #888;">感謝您的參與，祝您中大獎！</p>
@@ -186,7 +186,7 @@
             const file = new File([blob], "mommy_card.jpg", { type: "image/jpeg" });
             
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: '送給老爸的卡片' });
+                await navigator.share({ files: [file], title: '送給爸爸的卡片' });
             } else {
                 alert("手機暫不支援自動分享，請「長按圖片」選擇儲存或傳送喔！");
             }
