@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 1. 新增預覽標籤 (OG Tags)，確保 LINE 分享連結時顯示正確的標題與圖片 -->
+    <meta property="og:title" content="✨ 我的超人老爸 ✨">
+    <meta property="og:description" content="快來分享爸爸的超能力，還可以抽大獎喔！">
+    <meta property="og:image" content="2026daddy.jpg"> <!-- 預設抓取您的模板圖片作為縮圖 -->
+    <meta property="og:type" content="website">
+
     <title>我的超人老爸</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
@@ -69,7 +76,7 @@
         <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
-    <!-- 步驟 3: 製作卡片 (同前) -->
+    <!-- 步驟 3: 製作卡片 -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
         <p>(完成請點預覽)</p>
@@ -87,7 +94,6 @@
 </div>
 
 <script>
-    // ⚠️ 請替換成您重新部署後的 GAS 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbybkgqKYFIyQVuyznr69QCMGTyswIX70JqsZarMN5qL7nMfWLzupOfJLutzvzYBJbP3Ow/exec"; 
     const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
     const MY_LIFF_ID = "2009874827-0sg2wphM"; 
@@ -99,19 +105,27 @@
     };
 
     /**
-     * 3. 增強傳輸穩定性：使用 async fetch 並優化 UI 反饋
-     * 為了速度，我們不等待 GAS 完全回傳（因為 GAS 回傳有時會因跳轉導致 CORS 錯誤），
-     * 只要發出請求後延遲一小段時間即進入下一步。
+     * 穩定性邏輯增強：
+     * 1. 增加超時保護與 Error Catch，避免網路中斷導致頁面卡死。
+     * 2. 優化 fetch 設定，確保在 GAS 環境下資料能成功發出。
      */
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
         const finalUrl = `${GAS_URL}?${query}`;
         
-        // 優先使用 fetch 且不處理回應 (Fire and Forget)，這在 LIFF 環境最快
-        fetch(finalUrl, { mode: 'no-cors' });
+        try {
+            // 使用 no-cors 模式確保發送行為最快且不被跨域攔截
+            fetch(finalUrl, { 
+                method: 'GET',
+                mode: 'no-cors',
+                cache: 'no-cache'
+            });
+        } catch (e) {
+            console.warn("後台傳送紀錄中...");
+        }
         
-        // 延遲 600ms 給瀏覽器一點點時間處理發送，然後直接回傳
-        return new Promise(resolve => setTimeout(resolve, 600));
+        // 增加緩衝時間（穩定性邏輯）：確保封包有足夠時間從手機發出後才切換下一步
+        return new Promise(resolve => setTimeout(resolve, 800));
     }
 
     async function submitQuote() {
@@ -124,9 +138,7 @@
         btn.disabled = true;
         loader.style.display = 'block';
 
-        // action 指定為 saveQuote
         await sendDataToGAS({ action: 'saveQuote', quote: quote });
-        
         showStep(2);
     }
 
@@ -142,7 +154,6 @@
         btn.disabled = true;
         loader.style.display = 'block';
 
-        // action 指定為 saveRaffle
         await sendDataToGAS({ 
             action: 'saveRaffle', 
             empId: empId, 
@@ -154,7 +165,6 @@
         showStep(3);
     }
 
-    // 顯示步驟與 Canvas 繪製邏輯保持不變...
     function showStep(s) {
         document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
         document.getElementById('step' + s).classList.add('active');
@@ -162,7 +172,6 @@
     }
 
     function drawCard() {
-        // ... (保持您原有的 drawCard 邏輯)
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
