@@ -6,7 +6,11 @@
     <title>我的超人老爸</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        :root { --primary-blue: #5170ff; --bg-cream: #fdf8f1; }
+        /* 1. 修正按鈕顏色為藍色 #5170ff */
+        :root { 
+            --primary-blue: #5170ff; 
+            --bg-cream: #fdf8f1; 
+        }
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-cream); margin: 0; padding: 0; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; text-align: center; }
         .step { display: none; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
@@ -15,79 +19,73 @@
         
         h2 { color: var(--primary-blue); margin-bottom: 15px; }
         p { color: #666; font-size: 15px; }
-        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
         
-        button { background-color: var(--primary-blue); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(81, 112, 255, 0.3); }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
+        
+        /* 修正按鈕樣式 */
+        button { 
+            background-color: var(--primary-blue); 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 30px; 
+            font-size: 18px; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 10px rgba(81, 112, 255, 0.3);
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
         
         .share-btn { background-color: white !important; color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; }
-        
-        #cardCanvas { display: none; }
-        #finalImg { 
-            max-width: 100%; 
-            border-radius: 10px; 
-            margin-top: 15px; 
-            display: none; 
-            border: 2px solid var(--primary-blue); 
-            width: 100%; 
-        }
-        .tip-box { 
-            background-color: #e7f0ff; 
-            color: #333; 
-            padding: 15px; 
-            border-radius: 10px; 
-            margin-top: 15px; 
-            font-size: 14px; 
-            text-align: left;
-            display: none;
-            border-left: 5px solid var(--primary-blue);
-        }
+        canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
+        #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; width: 100%; }
+        .instruction { font-size: 14px; color: #888; margin-top: 10px; }
         .loading-text { color: var(--primary-blue); font-weight: bold; display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 步驟 1 -->
+    <!-- 步驟 1: 送出超能力 -->
     <div id="step1" class="step active">
         <h2>✨ 我的超人老爸 ✨</h2>
-        <p>請分享你心中的爸爸，擁有什麼超能力？</p>
+        <p>請分享你心中的爸爸，擁有什麼超能力，是什麼樣的超人呢？</p>
         <textarea id="quoteInput_display" rows="3" placeholder="例如：打呼響徹雲霄，左鄰右舍都聽得到😅或是早出晚歸工作不怕累的超人"></textarea>
-        <div id="loading1" class="loading-text">🚀 資料傳送中...</div>
+        <div id="loading1" class="loading-text">🚀 資料傳送中，請稍候...</div>
         <button id="btn1" onclick="submitQuote()">送出超能力，抽大獎</button>
     </div>
 
-    <!-- 步驟 2 -->
+    <!-- 步驟 2: 送出抽獎資料 -->
     <div id="step2" class="step">
         <h2>🎁 填寫抽獎資料 🎁</h2>
         <input type="text" id="empId_display" placeholder="工號(9位數)">
-        <input type="text" id="dept_display" placeholder="公司部門">
+        <input type="text" id="dept_display" placeholder="公司部門(營管人資部)">
         <input type="text" id="name_display" placeholder="姓名">
-        <div id="loading2" class="loading-text">🚀 資料登記中...</div>
-        <button id="btn3" onclick="submitRaffle()">完成登記，製作卡片</button>
+        <div id="loading2" class="loading-text">🚀 資料登記中，請稍候...</div>
+        <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
-    <!-- 步驟 3 -->
+    <!-- 步驟 3: 製作卡片 -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
+        <p>(完成請點預覽)</p>
         <input type="text" id="cardTitle" placeholder="標題：親愛的老爸" maxlength="10">
         <textarea id="cardContent" rows="4" placeholder="謝謝您的付出與辛勞" maxlength="56"></textarea>
         <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
         <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
-        
-        <canvas id="cardCanvas"></canvas>
-        <img id="finalImg" alt="父親節卡片">
-
-        <div id="androidTip" class="tip-box">
-            <b>💡 Android 儲存教學：</b><br>
-            1. 點擊下方<b>「打開圖片」</b><br>
-            2. 在跳出的新畫面中<b>「長按圖片」</b><br>
-            3. 選擇<b>「下載圖片」</b>或<b>「分享圖片」</b>
-        </div>
-
+        <canvas id="cardCanvas" style="display:none;"></canvas>
+        <img id="finalImg" alt="卡片製作完成">
         <div id="saveInstruction" style="display:none;">
-            <button class="share-btn" id="btnOpen" onclick="openImageInNewWindow()">1. 打開圖片(儲存用)</button>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()" style="margin-top:10px;">2. 直接嘗試分享</button>
+            <p class="instruction" id="saveInstructionText" style="color:#5170ff; font-weight:bold; font-size:15px; margin-top:15px;">
+                🔥 點擊下方按鈕分享卡片！<br>
+                <span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按卡片</b>儲存傳送）</span>
+            </p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()" style="display:none;">分享卡片</button>
+            <button class="share-btn" id="btnDownload" onclick="downloadCardImage()" style="display:none;">儲存圖片到手機</button>
         </div>
     </div>
 </div>
@@ -96,7 +94,6 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbybkgqKYFIyQVuyznr69QCMGTyswIX70JqsZarMN5qL7nMfWLzupOfJLutzvzYBJbP3Ow/exec"; 
     const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
     const MY_LIFF_ID = "2010875068-ONmPRCy8"; 
-    let currentBlobUrl = null;
 
     window.onload = function() {
         liff.init({ liffId: MY_LIFF_ID }).then(() => {
@@ -106,26 +103,45 @@
 
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
-        fetch(`${GAS_URL}?${query}`, { mode: 'no-cors' });
+        const finalUrl = `${GAS_URL}?${query}`;
+        fetch(finalUrl, { mode: 'no-cors' });
         return new Promise(resolve => setTimeout(resolve, 600));
     }
 
     async function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
         if (!quote) return alert("請輸入內容");
-        document.getElementById('btn1').disabled = true;
-        document.getElementById('loading1').style.display = 'block';
+        
+        const btn = document.getElementById('btn1');
+        const loader = document.getElementById('loading1');
+        
+        btn.disabled = true;
+        loader.style.display = 'block';
+
         await sendDataToGAS({ action: 'saveQuote', quote: quote });
         showStep(2);
     }
 
     async function submitRaffle() {
         const empId = document.getElementById('empId_display').value;
+        const dept = document.getElementById('dept_display').value;
         const name = document.getElementById('name_display').value;
-        if(!empId || !name) return alert("請填寫工號與姓名");
-        document.getElementById('btn3').disabled = true;
-        document.getElementById('loading2').style.display = 'block';
-        await sendDataToGAS({ action: 'saveRaffle', empId: empId, dept: document.getElementById('dept_display').value, name: name });
+        if(!empId || !name) return alert("請完整填寫工號公司部門與姓名");
+
+        const btn = document.getElementById('btn3');
+        const loader = document.getElementById('loading2');
+        
+        btn.disabled = true;
+        loader.style.display = 'block';
+
+        await sendDataToGAS({ 
+            action: 'saveRaffle', 
+            empId: empId, 
+            dept: dept, 
+            name: name 
+        });
+
+        alert("抽獎資料登記完成！");
         showStep(3);
     }
 
@@ -139,7 +155,7 @@
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
-        if(!title || !content || !sender) return alert("請填寫內容");
+        if(!title || !content || !sender) return alert("請完整填寫");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
@@ -158,18 +174,15 @@
             ctx.font = "bold 40px Microsoft JhengHei"; 
             ctx.fillText(sender, 730, 900);
             
-            // 關鍵修正：將 Canvas 轉換為 Blob URL 而非 Base64
-            canvas.toBlob((blob) => {
-                if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl); // 釋放舊記憶體
-                currentBlobUrl = URL.createObjectURL(blob);
-                
-                const finalImg = document.getElementById('finalImg');
-                finalImg.src = currentBlobUrl;
-                finalImg.style.display = 'block';
-                document.getElementById('saveInstruction').style.display = 'block';
-                document.getElementById('androidTip').style.display = 'block';
-                finalImg.scrollIntoView({ behavior: 'smooth' });
-            }, 'image/jpeg', 0.95);
+            const dataURL = canvas.toDataURL("image/jpeg", 0.9);
+            const finalImg = document.getElementById('finalImg');
+            finalImg.src = dataURL;
+            finalImg.style.display = 'block';
+            document.getElementById('saveInstruction').style.display = 'block';
+            setupActionButtons();
+            
+            // 自動平滑滾動至圖片位置
+            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
     }
 
@@ -193,27 +206,130 @@
         }
     }
 
-    // 解決 Android 無法儲存的核心功能：在新分頁打開 Blob
-    function openImageInNewWindow() {
-        if (!currentBlobUrl) return alert("請先生成卡片");
-        // 在 LINE 內建瀏覽器中，嘗試使用 window.open 或直接跳轉
-        // 這會強制瀏覽器以檔案形式處理圖片
-        window.open(currentBlobUrl, '_blank');
+    // 判斷是否在 LINE 內建瀏覽器（LINE WebView 通常不支援檔案分享/下載）
+    function isLineInAppBrowser() {
+        return /Line/i.test(navigator.userAgent);
+    }
+    function isAndroidDevice() {
+        return /Android/i.test(navigator.userAgent);
     }
 
-    async function shareCardImage() {
-        if (!currentBlobUrl) return;
+    // 將 canvas 轉成 Blob（比 dataURL 更適合觸發下載，安卓相容性明顯較好）
+    function getCardBlob() {
+        const canvas = document.getElementById('cardCanvas');
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    }
+
+    // 偵測目前手機/瀏覽器是否支援「分享檔案」功能
+    function canShareFiles() {
+        if (isLineInAppBrowser()) return false; // LINE 內建瀏覽器即使回報支援，實際仍常常失敗
         try {
-            const response = await fetch(currentBlobUrl);
-            const blob = await response.blob();
+            const testFile = new File([new Blob(['x'], { type: 'image/jpeg' })], 'test.jpg', { type: 'image/jpeg' });
+            return !!(navigator.share && navigator.canShare && navigator.canShare({ files: [testFile] }));
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // 根據裝置能力，決定顯示「分享卡片」或「儲存圖片到手機」按鈕，並更新提示文字
+    function setupActionButtons() {
+        const btnShare = document.getElementById('btnShare');
+        const btnDownload = document.getElementById('btnDownload');
+        const instructionText = document.getElementById('saveInstructionText');
+
+        if (canShareFiles()) {
+            // 支援分享的手機：維持原本的分享功能，不受影響
+            btnShare.style.display = 'block';
+            btnDownload.style.display = 'none';
+            instructionText.innerHTML = '🔥 點擊下方按鈕分享卡片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>';
+        } else {
+            // 不支援分享的手機：改顯示儲存圖片按鈕
+            btnShare.style.display = 'none';
+            btnDownload.style.display = 'block';
+            instructionText.innerHTML = '💾 點擊下方按鈕儲存圖片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>';
+        }
+    }
+
+    // 分享卡片：優先呼叫原生 Web Share API
+    async function shareCardImage() {
+        const finalImg = document.getElementById('finalImg');
+        if (!finalImg.src) {
+            alert("請先填寫內容並點擊「預覽卡片」！");
+            return;
+        }
+
+        // LINE 內建瀏覽器幾乎不支援 Web Share 檔案分享，直接引導使用下載按鈕/長按儲存
+        if (isLineInAppBrowser()) {
+            alert("LINE 內建瀏覽器不支援直接分享圖片喔！\n\n請改用下方「下載圖片到手機」按鈕，或直接【長按上方卡片圖片】儲存📱");
+            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        try {
+            const blob = await getCardBlob();
+            if (!blob) throw new Error("blob 產生失敗");
             const file = new File([blob], "daddy_card.jpg", { type: "image/jpeg" });
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: '父親節快樂' });
-            } else {
-                alert("手機暫不支援自動分享，請點擊打開圖片後長按儲存。");
+                await navigator.share({ files: [file], title: '父親節快樂💖' });
+                return;
             }
-        } catch (e) { console.log(e); }
+        } catch (e) {
+            console.log("Web Share 無法發送或使用者取消", e);
+            if (e.name === 'AbortError') return; // 使用者主動取消分享，不需再引導
+        }
+
+        // 不支援 Web Share 檔案分享時，改用下載流程
+        await downloadCardImage();
+    }
+
+    // 下載卡片：使用 Blob + createObjectURL 觸發下載，安卓瀏覽器相容性遠比 dataURL 好
+    async function downloadCardImage() {
+        const finalImg = document.getElementById('finalImg');
+        if (!finalImg.src) {
+            alert("請先填寫內容並點擊「預覽卡片」！");
+            return;
+        }
+
+        // LINE 內建瀏覽器通常會擋下載事件，直接引導長按儲存最保險
+        if (isLineInAppBrowser()) {
+            alert("卡片準備好囉！\n\n若沒有自動下載，請長按卡片傳送！");
+            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        const blob = await getCardBlob();
+        if (!blob) {
+            alert("圖片產生失敗，請重新點擊「預覽卡片」再試一次！");
+            return;
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+        let downloadTriggered = false;
+        try {
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = "daddy_card.jpg";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            downloadTriggered = true;
+        } catch (err) {
+            console.log("下載觸發失敗", err);
+        }
+
+        if (isAndroidDevice()) {
+            alert(downloadTriggered
+                ? "圖片已嘗試自動下載！\n\n若沒有跳出通知，請長按卡片選擇儲存即可📱"
+                : "請長按卡片，選擇「儲存圖片」即可📱");
+        } else {
+            alert("卡片準備好囉！\n\n若沒有自動下載，請長按卡片傳送！");
+        }
+
+        finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 延遲釋放 Blob URL，確保下載已完成讀取
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
     }
 </script>
 </body>
