@@ -42,7 +42,7 @@
         
         .share-btn { background-color: white !important; color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; }
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
-        #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; width: 100%; }
+        #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
         .loading-text { color: var(--primary-blue); font-weight: bold; display: none; margin-top: 10px; }
     </style>
@@ -69,7 +69,7 @@
         <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
-    <!-- 步驟 3: 製作卡片 -->
+    <!-- 步驟 3: 製作卡片 (同前) -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
         <p>(完成請點預覽)</p>
@@ -80,17 +80,14 @@
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片製作完成">
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" id="saveInstructionText" style="color:#5170ff; font-weight:bold; font-size:15px; margin-top:15px;">
-                🔥 點擊下方按鈕分享卡片！<br>
-                <span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>
-            </p>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()" style="display:none;">分享卡片</button>
-            <button class="share-btn" id="btnDownload" onclick="downloadCardImage()" style="display:none;">儲存圖片到手機</button>
+            <p class="instruction" style="color:#5170ff; font-weight:bold;">🔥 點擊下方按鈕分享卡片！</p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
         </div>
     </div>
 </div>
 
 <script>
+    // ⚠️ 請替換成您重新部署後的 GAS 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbybkgqKYFIyQVuyznr69QCMGTyswIX70JqsZarMN5qL7nMfWLzupOfJLutzvzYBJbP3Ow/exec"; 
     const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
     const MY_LIFF_ID = "2010875068-ONmPRCy8"; 
@@ -101,16 +98,25 @@
         }).catch(err => console.error(err));
     };
 
+    /**
+     * 3. 增強傳輸穩定性：使用 async fetch 並優化 UI 反饋
+     * 為了速度，我們不等待 GAS 完全回傳（因為 GAS 回傳有時會因跳轉導致 CORS 錯誤），
+     * 只要發出請求後延遲一小段時間即進入下一步。
+     */
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
         const finalUrl = `${GAS_URL}?${query}`;
+        
+        // 優先使用 fetch 且不處理回應 (Fire and Forget)，這在 LIFF 環境最快
         fetch(finalUrl, { mode: 'no-cors' });
+        
+        // 延遲 600ms 給瀏覽器一點點時間處理發送，然後直接回傳
         return new Promise(resolve => setTimeout(resolve, 600));
     }
 
     async function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
-        if (!quote) return alert("請輸入內容");
+        if (!quote) return alert("請輸入內容喔");
         
         const btn = document.getElementById('btn1');
         const loader = document.getElementById('loading1');
@@ -118,7 +124,9 @@
         btn.disabled = true;
         loader.style.display = 'block';
 
+        // action 指定為 saveQuote
         await sendDataToGAS({ action: 'saveQuote', quote: quote });
+        
         showStep(2);
     }
 
@@ -134,6 +142,7 @@
         btn.disabled = true;
         loader.style.display = 'block';
 
+        // action 指定為 saveRaffle
         await sendDataToGAS({ 
             action: 'saveRaffle', 
             empId: empId, 
@@ -145,6 +154,7 @@
         showStep(3);
     }
 
+    // 顯示步驟與 Canvas 繪製邏輯保持不變...
     function showStep(s) {
         document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
         document.getElementById('step' + s).classList.add('active');
@@ -152,10 +162,11 @@
     }
 
     function drawCard() {
+        // ... (保持您原有的 drawCard 邏輯)
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
-        if(!title || !content || !sender) return alert("請完整填寫");
+        if(!title || !content || !sender) return alert("請完整填寫喔");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
@@ -179,10 +190,6 @@
             finalImg.src = dataURL;
             finalImg.style.display = 'block';
             document.getElementById('saveInstruction').style.display = 'block';
-            setupActionButtons();
-            
-            // 自動平滑滾動至圖片位置
-            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
     }
 
@@ -206,130 +213,17 @@
         }
     }
 
-    // 判斷是否在 LINE 內建瀏覽器（LINE WebView 通常不支援檔案分享/下載）
-    function isLineInAppBrowser() {
-        return /Line/i.test(navigator.userAgent);
-    }
-    function isAndroidDevice() {
-        return /Android/i.test(navigator.userAgent);
-    }
-
-    // 將 canvas 轉成 Blob（比 dataURL 更適合觸發下載，安卓相容性明顯較好）
-    function getCardBlob() {
-        const canvas = document.getElementById('cardCanvas');
-        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-    }
-
-    // 偵測目前手機/瀏覽器是否支援「分享檔案」功能
-    function canShareFiles() {
-        if (isLineInAppBrowser()) return false; // LINE 內建瀏覽器即使回報支援，實際仍常常失敗
-        try {
-            const testFile = new File([new Blob(['x'], { type: 'image/jpeg' })], 'test.jpg', { type: 'image/jpeg' });
-            return !!(navigator.share && navigator.canShare && navigator.canShare({ files: [testFile] }));
-        } catch (e) {
-            return false;
-        }
-    }
-
-    // 根據裝置能力，決定顯示「分享卡片」或「儲存圖片到手機」按鈕，並更新提示文字
-    function setupActionButtons() {
-        const btnShare = document.getElementById('btnShare');
-        const btnDownload = document.getElementById('btnDownload');
-        const instructionText = document.getElementById('saveInstructionText');
-
-        if (canShareFiles()) {
-            // 支援分享的手機：維持原本的分享功能，不受影響
-            btnShare.style.display = 'block';
-            btnDownload.style.display = 'none';
-            instructionText.innerHTML = '🔥 點擊下方按鈕分享卡片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>';
-        } else {
-            // 不支援分享的手機：改顯示儲存圖片按鈕
-            btnShare.style.display = 'none';
-            btnDownload.style.display = 'block';
-            instructionText.innerHTML = '💾 點擊下方按鈕儲存圖片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>';
-        }
-    }
-
-    // 分享卡片：優先呼叫原生 Web Share API
     async function shareCardImage() {
-        const finalImg = document.getElementById('finalImg');
-        if (!finalImg.src) {
-            alert("請先填寫內容並點擊「預覽並生成卡片」！");
-            return;
-        }
-
-        // LINE 內建瀏覽器幾乎不支援 Web Share 檔案分享，直接引導使用下載按鈕/長按儲存
-        if (isLineInAppBrowser()) {
-            alert("LINE 內建瀏覽器不支援直接分享圖片喔！\n\n請改用下方「下載圖片到手機」按鈕，或直接【長按上方卡片圖片】儲存📱");
-            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-
+        const canvas = document.getElementById('cardCanvas');
         try {
-            const blob = await getCardBlob();
-            if (!blob) throw new Error("blob 產生失敗");
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             const file = new File([blob], "daddy_card.jpg", { type: "image/jpeg" });
-
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: '父親節快樂💖' });
-                return;
+            } else {
+                alert("手機暫不支援自動分享，請長按圖片儲存");
             }
-        } catch (e) {
-            console.log("Web Share 無法發送或使用者取消", e);
-            if (e.name === 'AbortError') return; // 使用者主動取消分享，不需再引導
-        }
-
-        // 不支援 Web Share 檔案分享時，改用下載流程
-        await downloadCardImage();
-    }
-
-    // 下載卡片：使用 Blob + createObjectURL 觸發下載，安卓瀏覽器相容性遠比 dataURL 好
-    async function downloadCardImage() {
-        const finalImg = document.getElementById('finalImg');
-        if (!finalImg.src) {
-            alert("請先填寫內容並點擊「預覽並生成卡片」！");
-            return;
-        }
-
-        // LINE 內建瀏覽器通常會擋下載事件，直接引導長按儲存最保險
-        if (isLineInAppBrowser()) {
-            alert("卡片已經準備好囉！\n\n請【長按上方卡片圖片】，選擇「儲存圖片」即可存到手機相簿📱");
-            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-
-        const blob = await getCardBlob();
-        if (!blob) {
-            alert("圖片產生失敗，請重新點擊「預覽並生成卡片」再試一次！");
-            return;
-        }
-
-        const blobUrl = URL.createObjectURL(blob);
-        let downloadTriggered = false;
-        try {
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = "daddy_card.jpg";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            downloadTriggered = true;
-        } catch (err) {
-            console.log("下載觸發失敗", err);
-        }
-
-        if (isAndroidDevice()) {
-            alert(downloadTriggered
-                ? "圖片已嘗試自動下載到手機的「下載」資料夾！\n\n若沒有跳出下載通知，請【長按上方卡片圖片】選擇「儲存圖片」即可📱"
-                : "請【長按上方卡片圖片】，選擇「儲存圖片」即可存到手機相簿📱");
-        } else {
-            alert("卡片已為您準備好！\n\n若沒有自動下載，請【長按上方圖片】儲存傳送！");
-        }
-
-        finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // 延遲釋放 Blob URL，確保下載已完成讀取
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        } catch (e) { console.log("Share failed", e); }
     }
 </script>
 </body>
