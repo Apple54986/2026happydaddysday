@@ -76,16 +76,16 @@
         <input type="text" id="cardTitle" placeholder="標題：親愛的老爸" maxlength="10">
         <textarea id="cardContent" rows="4" placeholder="謝謝您的付出與辛勞" maxlength="56"></textarea>
         <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
-        <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
+        <button id="btnPreview" onclick="drawCard()">預覽卡片</button>
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片製作完成">
         <div id="saveInstruction" style="display:none;">
             <p class="instruction" id="saveInstructionText" style="color:#5170ff; font-weight:bold; font-size:15px; margin-top:15px;">
-                🔥 點擊下方按鈕分享卡片！<br>
+                🔥 點擊下方分享卡片！<br>
                 <span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按卡片</b>儲存傳送）</span>
             </p>
             <button class="share-btn" id="btnShare" onclick="shareCardImage()" style="display:none;">分享卡片</button>
-            <button class="share-btn" id="btnDownload" onclick="downloadCardImage()" style="display:none;">儲存圖片到手機</button>
+            <button class="share-btn" id="btnDownload" onclick="downloadCardImage()" style="display:none;">儲存圖片</button>
         </div>
     </div>
 </div>
@@ -241,12 +241,12 @@
             // 支援分享的手機：維持原本的分享功能，不受影響
             btnShare.style.display = 'block';
             btnDownload.style.display = 'none';
-            instructionText.innerHTML = '🔥 點擊下方按鈕分享卡片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>';
+            instructionText.innerHTML = '🔥 點擊下方分享卡片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按卡片</b>儲存傳送）</span>';
         } else {
             // 不支援分享的手機：改顯示儲存圖片按鈕
             btnShare.style.display = 'none';
             btnDownload.style.display = 'block';
-            instructionText.innerHTML = '💾 點擊下方按鈕儲存圖片！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>';
+            instructionText.innerHTML = '💾 點擊下方按鈕儲存！<br><span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按卡片</b>儲存傳送）</span>';
         }
     }
 
@@ -260,7 +260,7 @@
 
         // LINE 內建瀏覽器幾乎不支援 Web Share 檔案分享，直接引導使用下載按鈕/長按儲存
         if (isLineInAppBrowser()) {
-            alert("LINE 內建瀏覽器不支援直接分享圖片喔！\n\n請改用下方「下載圖片到手機」按鈕，或直接【長按上方卡片圖片】儲存📱");
+            alert("LINE 內建瀏覽器不支援分享圖片！\n\n請改用「下載圖片」按鈕，或直接【長按卡片】儲存📱");
             finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
