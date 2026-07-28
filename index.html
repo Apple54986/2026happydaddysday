@@ -73,7 +73,7 @@
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
         <p>(完成請點預覽)</p>
-        <input type="text" id="cardTitle" placeholder="標題：親愛的老爸" maxlength="10">
+        <input type="text" id="cardTitle" placeholder="親愛的老爸" maxlength="10">
         <textarea id="cardContent" rows="4" placeholder="謝謝您的付出與辛勞" maxlength="56"></textarea>
         <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
         <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
@@ -85,6 +85,7 @@
                 <span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存傳送）</span>
             </p>
             <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片</button>
+            <button class="share-btn" id="btnDownload" onclick="downloadCardImage()" style="margin-top:10px;">下載圖片到手機</button>
         </div>
     </div>
 </div>
@@ -204,56 +205,100 @@
         }
     }
 
-    // 全手機相容（包含 Android LINE 內建瀏覽器）分享與儲存函數
-    async function shareCardImage() {
-        const canvas = document.getElementById('cardCanvas');
-        const finalImg = document.getElementById('finalImg');
+    // 判斷是否在 LINE 內建瀏覽器（LINE WebView 通常不支援檔案分享/下載）
+    function isLineInAppBrowser() {
+        return /Line/i.test(navigator.userAgent);
+    }
+    function isAndroidDevice() {
+        return /Android/i.test(navigator.userAgent);
+    }
 
+    // 將 canvas 轉成 Blob（比 dataURL 更適合觸發下載，安卓相容性明顯較好）
+    function getCardBlob() {
+        const canvas = document.getElementById('cardCanvas');
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    }
+
+    // 分享卡片：優先呼叫原生 Web Share API
+    async function shareCardImage() {
+        const finalImg = document.getElementById('finalImg');
         if (!finalImg.src) {
             alert("請先填寫內容並點擊「預覽並生成卡片」！");
             return;
         }
 
-        let sharedSuccessfully = false;
+        // LINE 內建瀏覽器幾乎不支援 Web Share 檔案分享，直接引導使用下載按鈕/長按儲存
+        if (isLineInAppBrowser()) {
+            alert("LINE 內建瀏覽器不支援分享！\n\n請「下載圖片到手機」按鈕，或【長按上方卡片圖片】儲存📱");
+            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
 
-        // 1. 嘗試使用原生 Web Share API (適用於支援檔案分享的 iOS 與部分 Android 瀏覽器)
         try {
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            const blob = await getCardBlob();
+            if (!blob) throw new Error("blob 產生失敗");
             const file = new File([blob], "daddy_card.jpg", { type: "image/jpeg" });
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: '父親節快樂💖',                    
-                });
-                sharedSuccessfully = true;
+                await navigator.share({ files: [file], title: '父親節快樂💖' });
                 return;
             }
         } catch (e) {
             console.log("Web Share 無法發送或使用者取消", e);
-            // 若使用者點擊取消分享，不跳出錯誤提示
-            if (e.name === 'AbortError') return;
+            if (e.name === 'AbortError') return; // 使用者主動取消分享，不需再引導
         }
 
-        // 2. 當原生分享不支援（例如 Android LINE 內建 WebView）：自動觸發下載試驗
-        if (!sharedSuccessfully) {
-            try {
-                const a = document.createElement('a');
-                a.href = finalImg.src;
-                a.download = "daddy_card.jpg";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } catch (err) {
-                console.log("Download fallback triggered");
-            }
+        // 不支援 Web Share 檔案分享時，改用下載流程
+        await downloadCardImage();
+    }
 
-            // 3. 全 Android 機型 100% 成功的保底引導提示
-            alert("卡片已為您準備好！\n\n請【長按下方卡片圖片】，即可儲存圖片或傳送！");
-            
-            // 自動滾動聚焦到圖片，方便使用者直接長按
+    // 下載卡片：使用 Blob + createObjectURL 觸發下載，安卓瀏覽器相容性遠比 dataURL 好
+    async function downloadCardImage() {
+        const finalImg = document.getElementById('finalImg');
+        if (!finalImg.src) {
+            alert("請先填寫內容並點擊「預覽卡片」！");
+            return;
+        }
+
+        // LINE 內建瀏覽器通常會擋下載事件，直接引導長按儲存最保險
+        if (isLineInAppBrowser()) {
+            alert("卡片準備好囉！\n\n請【長按卡片】儲存即可📱");
             finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
         }
+
+        const blob = await getCardBlob();
+        if (!blob) {
+            alert("圖片產生失敗，請重新點擊「預覽卡片」再試一次！");
+            return;
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+        let downloadTriggered = false;
+        try {
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = "daddy_card.jpg";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            downloadTriggered = true;
+        } catch (err) {
+            console.log("下載觸發失敗", err);
+        }
+
+        if (isAndroidDevice()) {
+            alert(downloadTriggered
+                ? "圖片已嘗試自動下載到手機！\n\n若沒有跳出通知，請【長按卡片】儲存即可📱"
+                : "卡片準備好囉！\n\n請【長按卡片】儲存即可📱");
+        } else {
+            alert("卡片已為您準備好！\n\n若沒有自動下載，請【長按圖片】儲存傳送！");
+        }
+
+        finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 延遲釋放 Blob URL，確保下載已完成讀取
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
     }
 </script>
 </body>
