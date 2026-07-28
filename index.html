@@ -38,21 +38,25 @@
         button:active { transform: scale(0.98); }
         button:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
         
-        .share-btn { background-color: white !important; color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; }
-        .download-btn { background-color: #4CAF50 !important; margin-top: 10px; } /* 新增綠色下載按鈕樣式 */
+        /* 儲存/分享按鈕樣式 */
+        .share-btn { 
+            background-color: #4CAF50 !important; 
+            color: white !important; 
+            border: none !important;
+        }
 
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         
-        /* 修正 Android 長按問題的關鍵 CSS */
+        /* 關鍵：修正長按儲存 */
         #finalImg { 
             max-width: 100%; 
             border-radius: 10px; 
             margin-top: 15px; 
             display: none; 
             border: 1px solid #ddd;
-            -webkit-touch-callout: default !important; /* 確保系統選單彈出 */
-            -webkit-user-select: auto !important;
-            user-select: auto !important;
+            /* 允許長按呼叫系統選單 */
+            -webkit-touch-callout: default !important;
+            pointer-events: auto !important;
         }
         
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
@@ -62,6 +66,7 @@
 <body>
 
 <div class="container">
+    <!-- 步驟 1 -->
     <div id="step1" class="step active">
         <h2>✨ 我的超人老爸 ✨</h2>
         <p>請分享你心中的爸爸，擁有什麼超能力，是什麼樣的超人呢？</p>
@@ -70,6 +75,7 @@
         <button id="btn1" onclick="submitQuote()">送出超能力，抽大獎</button>
     </div>
 
+    <!-- 步驟 2 -->
     <div id="step2" class="step">
         <h2>🎁 填寫抽獎資料 🎁</h2>
         <input type="text" id="empId_display" placeholder="工號(9位數)">
@@ -79,19 +85,22 @@
         <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
+    <!-- 步驟 3 -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
-        <p>(完成請點預覽)</p>
+        <p>(製作完成後可長按圖片或點選分享)</p>
         <input type="text" id="cardTitle" placeholder="標題：親愛的老爸" maxlength="10">
         <textarea id="cardContent" rows="4" placeholder="謝謝您的付出與辛勞" maxlength="56"></textarea>
         <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
         <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
         <canvas id="cardCanvas" style="display:none;"></canvas>
+        
+        <!-- 顯示生成的圖片 -->
         <img id="finalImg" alt="卡片製作完成">
+        
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#5170ff; font-weight:bold;">🔥 長按上方卡片儲存，或點及下方按鈕</p>
-            <button class="download-btn" id="btnDownload" onclick="downloadImage()">下載儲存卡片</button>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片</button>
+            <p class="instruction" style="color:#5170ff; font-weight:bold;">製作完成！<br>請長按圖片儲存，或點擊下方按鈕分享/儲存</p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享/儲存卡片</button>
         </div>
     </div>
 </div>
@@ -145,7 +154,7 @@
         window.scrollTo(0,0);
     }
 
-    // 核心調整：改用 Blob URL 以支援 Android 長按儲存
+    // 調整：為了增加 Android 兼容性，同時提供 Base64 給長按使用
     function drawCard() {
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
@@ -169,30 +178,16 @@
             ctx.font = "bold 40px Microsoft JhengHei"; 
             ctx.fillText(sender, 730, 900);
             
-            // 關鍵修改：將 Canvas 轉為 Blob URL 而非 DataURL
-            canvas.toBlob(function(blob) {
-                const blobUrl = URL.createObjectURL(blob);
-                const finalImg = document.getElementById('finalImg');
-                finalImg.src = blobUrl;
-                finalImg.style.display = 'block';
-                document.getElementById('saveInstruction').style.display = 'block';
-                
-                // 存一份到 window 供下載按鈕使用
-                window.currentCardBlobUrl = blobUrl;
-            }, 'image/jpeg', 0.9);
+            // 使用 JPEG 格式，這在 Android 長按識別率最高
+            const dataURL = canvas.toDataURL("image/jpeg", 0.8);
+            const finalImg = document.getElementById('finalImg');
+            finalImg.src = dataURL;
+            finalImg.style.display = 'block';
+            document.getElementById('saveInstruction').style.display = 'block';
+            
+            // 滑動到圖片位置，提醒用戶可以操作了
+            finalImg.scrollIntoView({behavior: "smooth"});
         };
-    }
-
-    // 新增下載功能，作為長按失敗的備援
-    function downloadImage() {
-        const url = window.currentCardBlobUrl;
-        if(!url) return;
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = "daddy_card.jpg";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
 
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
@@ -215,17 +210,31 @@
         }
     }
 
+    /**
+     * 調整：Android 最佳儲存方案
+     * 使用 Web Share API 將檔案傳送到系統分享選單
+     * 使用者可以在選單中選擇「儲存圖片」或直接傳給 LINE 好友
+     */
     async function shareCardImage() {
         const canvas = document.getElementById('cardCanvas');
         try {
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-            const file = new File([blob], "daddy_card.jpg", { type: "image/jpeg" });
+            const file = new File([blob], "father_day_card.jpg", { type: "image/jpeg" });
+            
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: '父親節快樂💖' });
+                await navigator.share({
+                    files: [file],
+                    title: '我的超人老爸',
+                    text: '父親節快樂💖'
+                });
             } else {
-                alert("手機暫不支援自動分享，請長按圖片儲存或點擊下載");
+                // 如果瀏覽器不支持 Web Share (極少數狀況)
+                alert("請長按圖片進行儲存");
             }
-        } catch (e) { console.log("Share failed", e); }
+        } catch (e) {
+            console.error("Share failed", e);
+            alert("請長按圖片進行儲存");
+        }
     }
 </script>
 </body>
