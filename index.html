@@ -42,7 +42,7 @@
         
         .share-btn { background-color: white !important; color: var(--primary-blue) !important; border: 2px solid var(--primary-blue) !important; }
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
-        #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
+        #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; width: 100%; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
         .loading-text { color: var(--primary-blue); font-weight: bold; display: none; margin-top: 10px; }
     </style>
@@ -69,7 +69,7 @@
         <button id="btn3" onclick="submitRaffle()">完成登記，去製作卡片</button>
     </div>
 
-    <!-- 步驟 3: 製作卡片 (同前) -->
+    <!-- 步驟 3: 製作卡片 -->
     <div id="step3" class="step">
         <h2>💖 製作專屬卡片</h2>
         <p>(完成請點預覽)</p>
@@ -80,14 +80,16 @@
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片製作完成">
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#5170ff; font-weight:bold;">🔥 點擊下方按鈕分享卡片！</p>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
+            <p class="instruction" style="color:#5170ff; font-weight:bold; font-size:15px; margin-top:15px;">
+                🔥 點擊下方按鈕分享卡片！<br>
+                <span style="font-weight:normal; font-size:13px; color:#666;">（若手機無反應，可<b>長按上方圖片</b>儲存或傳送給好友）</span>
+            </p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享 / 下載卡片圖檔</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ⚠️ 請替換成您重新部署後的 GAS 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbybkgqKYFIyQVuyznr69QCMGTyswIX70JqsZarMN5qL7nMfWLzupOfJLutzvzYBJbP3Ow/exec"; 
     const CARD_TEMPLATE_URL = "2026daddy.jpg"; 
     const MY_LIFF_ID = "2010875068-ONmPRCy8"; 
@@ -98,25 +100,16 @@
         }).catch(err => console.error(err));
     };
 
-    /**
-     * 3. 增強傳輸穩定性：使用 async fetch 並優化 UI 反饋
-     * 為了速度，我們不等待 GAS 完全回傳（因為 GAS 回傳有時會因跳轉導致 CORS 錯誤），
-     * 只要發出請求後延遲一小段時間即進入下一步。
-     */
     async function sendDataToGAS(params) {
         const query = new URLSearchParams(params).toString();
         const finalUrl = `${GAS_URL}?${query}`;
-        
-        // 優先使用 fetch 且不處理回應 (Fire and Forget)，這在 LIFF 環境最快
         fetch(finalUrl, { mode: 'no-cors' });
-        
-        // 延遲 600ms 給瀏覽器一點點時間處理發送，然後直接回傳
         return new Promise(resolve => setTimeout(resolve, 600));
     }
 
     async function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
-        if (!quote) return alert("請輸入內容喔");
+        if (!quote) return alert("請輸入內容");
         
         const btn = document.getElementById('btn1');
         const loader = document.getElementById('loading1');
@@ -124,9 +117,7 @@
         btn.disabled = true;
         loader.style.display = 'block';
 
-        // action 指定為 saveQuote
         await sendDataToGAS({ action: 'saveQuote', quote: quote });
-        
         showStep(2);
     }
 
@@ -142,7 +133,6 @@
         btn.disabled = true;
         loader.style.display = 'block';
 
-        // action 指定為 saveRaffle
         await sendDataToGAS({ 
             action: 'saveRaffle', 
             empId: empId, 
@@ -154,7 +144,6 @@
         showStep(3);
     }
 
-    // 顯示步驟與 Canvas 繪製邏輯保持不變...
     function showStep(s) {
         document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
         document.getElementById('step' + s).classList.add('active');
@@ -162,11 +151,10 @@
     }
 
     function drawCard() {
-        // ... (保持您原有的 drawCard 邏輯)
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
-        if(!title || !content || !sender) return alert("請完整填寫喔");
+        if(!title || !content || !sender) return alert("請完整填寫");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
@@ -190,6 +178,9 @@
             finalImg.src = dataURL;
             finalImg.style.display = 'block';
             document.getElementById('saveInstruction').style.display = 'block';
+            
+            // 自動平滑滾動至圖片位置
+            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
     }
 
@@ -213,17 +204,56 @@
         }
     }
 
+    // 全手機相容（包含 Android LINE 內建瀏覽器）分享與儲存函數
     async function shareCardImage() {
         const canvas = document.getElementById('cardCanvas');
+        const finalImg = document.getElementById('finalImg');
+
+        if (!finalImg.src) {
+            alert("請先填寫內容並點擊「預覽並生成卡片」！");
+            return;
+        }
+
+        let sharedSuccessfully = false;
+
+        // 1. 嘗試使用原生 Web Share API (適用於支援檔案分享的 iOS 與部分 Android 瀏覽器)
         try {
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             const file = new File([blob], "daddy_card.jpg", { type: "image/jpeg" });
+
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: '父親節快樂💖' });
-            } else {
-                alert("手機暫不支援自動分享，請長按圖片儲存");
+                await navigator.share({
+                    files: [file],
+                    title: '父親節快樂💖',                    
+                });
+                sharedSuccessfully = true;
+                return;
             }
-        } catch (e) { console.log("Share failed", e); }
+        } catch (e) {
+            console.log("Web Share 無法發送或使用者取消", e);
+            // 若使用者點擊取消分享，不跳出錯誤提示
+            if (e.name === 'AbortError') return;
+        }
+
+        // 2. 當原生分享不支援（例如 Android LINE 內建 WebView）：自動觸發下載試驗
+        if (!sharedSuccessfully) {
+            try {
+                const a = document.createElement('a');
+                a.href = finalImg.src;
+                a.download = "daddy_card.jpg";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (err) {
+                console.log("Download fallback triggered");
+            }
+
+            // 3. 全 Android 機型 100% 成功的保底引導提示
+            alert("卡片已為您準備好！\n\n請【長按下方卡片圖片】，即可儲存圖片或傳送！");
+            
+            // 自動滾動聚焦到圖片，方便使用者直接長按
+            finalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 </script>
 </body>
