@@ -80,8 +80,8 @@
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片製作完成">
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#5170ff; font-weight:bold;">🔥 點擊下方按鈕分享卡片！</p>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
+            <p class="instruction" style="color:#5170ff; font-weight:bold;">🔥 點擊下方按鈕分享！</p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片</button>
         </div>
     </div>
 </div>
@@ -116,7 +116,7 @@
 
     async function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
-        if (!quote) return alert("請輸入內容喔");
+        if (!quote) return alert("請輸入內容");
         
         const btn = document.getElementById('btn1');
         const loader = document.getElementById('loading1');
@@ -166,7 +166,7 @@
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
-        if(!title || !content || !sender) return alert("請完整填寫喔");
+        if(!title || !content || !sender) return alert("請完整填寫");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
